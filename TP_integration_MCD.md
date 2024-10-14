@@ -2,15 +2,18 @@
 
 C'est là qu'on commence à s'amuser.
 
+## Objectif
+Intégrer les entités et les relations du Modèle Conceptuel de Données (MCD) de League of Legends dans un projet Laravel existant.
+
 ## A. Initialisation du projet
 
 ### 1. Mise en place de Laravel
 
-Pour construire le site web, vous n'allez pas créer toute l'architecture vous même. On va utiliser un framework PHP du nom de Laravel.
+Pour construire le site web, vous n'allez pas créer toute l'architecture vous même. On va utiliser un framework PHP du nom de Laravel dans un conteneur Docker.
 
-Dans Docker Desktop, rechercher l'image `shinsenter/laravel` et faite `pull` sur cette image.
+Lancer **Docker** en administrateur avec le compte **.\tpdocker**.
 
-Ouvrez un terminal bash et entrer la commande suivante en remplaçant `csimon.SNIRW` par votre dossier.
+Ouvrez un terminal **bash en administrateur** avec le compte **.\tpdocker**. Copiez-collez la commande ci-dessous dans un bloc-note, remplacer `csimon.SNIRW` par votre nom de dossier puis mettez cette commande dnas le bash.
 
 ```bash
 docker run -p 80:80 -p 443:443 -p 443:443/udp \
@@ -24,9 +27,9 @@ Aller à l'URL `localhost` et vous devriez avoir la page de présentation de Lar
 
 ### 2. Import des assets
 
-Dans votre dossier `BTS2-CIEL-IR-MCD-2024-2025/League_of_Branly` se trouve un ensemble de différent éléments de code. Récupérer les et placez les aux bons endroits dans votre dossier `D:/<votreNom.SNIR>/League_of_Branly`.
+Dans votre repository Github `BTS2-CIEL-IR-MCD-2024-2025/League_of_Branly` se trouve un ensemble de différent éléments de code. Récupérer les via Github Desktop et placez les aux bons endroits dans votre dossier `D:/<votreNom.SNIR>/League_of_Branly`.
 
-Après actualisation du site internet, vous devriez voir s'affichez le thème League of Branly. Inspecter la page pour vérifier qu'il n'y a pas d'erreur 404 au chargement des éléments. En cas d'erreurs, corrigez les.
+Après actualisation du site internet, vous devriez voir s'afficher le thème League of Branly. Inspectez la page pour vérifier qu'il n'y a pas d'erreur 404 au chargement des éléments. En cas d'erreurs, corrigez les.
 
 ![image](https://github.com/user-attachments/assets/e81b1369-840e-4960-a588-61a3c45e4e85)
 
@@ -39,100 +42,207 @@ php artisan view:clear
 
 ### 3. Visualisation de la base de données
 
-Ouvrez votre dossier `League of Branly` avec Visual Studio Code.
+Laravel est livré avec une base de données `SQLite` qui se trouve dans le fichier `database/database.sqlite`. Il s'agit d'un format compacte utile pour des petits projet. 
 
-Dans le dossier `database` vous remarquerez un fichier `database.sqlite`. Afin de pouvoir visualiser cette base de données, installer l'extension `SQLite` :
+Afin de pouvoir naviguer facilement dans votre BDD, installez le logiciel [Heidi](https://www.heidisql.com/download.php?download=installer)
 
-![image](https://github.com/user-attachments/assets/1381b158-6b53-4d0f-ab02-a9cb4cca61bf)
+Configurez HEIDI avec les paramétres ci-dessous :
 
-Puis tapez sur la touche F1 et rentrez `SQLite: Open Database` puis sélectionnez `database\database.sqlite`, cela rajoute un volet dépliant dans la colonne de gauche :
-
-![image](https://github.com/user-attachments/assets/30653a25-c903-48e6-bc23-f0227254224c)
+![image](https://github.com/user-attachments/assets/8ed92a0b-d5f3-4b0c-911c-a7c14226035b)
 
 ## B. Intégration du modèle Entités-Relations
 
-### 1. Création des entités en utilisant `artisan`
+### 0. Le modèle Entités-Relations
 
-Dans le terminal de votre conteneur et pour chacune de vos entités, utilisez la commande suivante en remplacant `Champion` par le nom voulu. Vous noterez que les noms d'entités commencent par des majuscules et sont au singulier.
+Afin de tous partir sur la même base, je vous propose d'implémenter ce MCD :
+
+```mermaid
+erDiagram
+    CHAMPION {
+        int champion_id PK
+        varchar(50) champion_name
+    }
+    GENDER {
+        int gender_id PK
+        varchar(20) name
+    }
+    POSITION {
+        int position_id PK
+        varchar(20) position_name
+    }
+    SPECIE {
+        int specie_id PK
+        varchar(50) specie_name
+    }
+    RESOURCE {
+        int resource_id PK
+        varchar(30) resource_name
+    }
+    RANGE {
+        int range_id PK
+        varchar(20) range_name
+    }
+    REGION {
+        int region_id PK
+        varchar(50) region_name
+        text lore
+    }
+    YEAR {
+        int year_id PK
+        int year_number
+    }
+
+    CHAMPION ||--o| GENDER : "has"
+    CHAMPION }o--o{ POSITION : "can_play_as"
+    CHAMPION }o--o{ SPECIE : "belongs_to"
+    CHAMPION ||--o| RESOURCE : "uses"
+    CHAMPION }o--o{ RANGE : "has"
+    CHAMPION }o--o{ REGION : "comes_from"
+    CHAMPION ||--o| YEAR : "released_in"
+```
+
+### 1. Création des migrations
+
+Le fonctionnement des migrations est expliqué [ici](./Migration.md)
+
+Ouvrez le terminal de votre conteneur dans Docker Desktop.
+
+**Tâche :** Créez les migrations pour toutes les tables nécessaires.
+
 ```bash
-php artisan make:model Champion -m
+php artisan make:migration create_champions_table
+php artisan make:migration create_genders_table
+php artisan make:migration create_positions_table
+php artisan make:migration create_species_table
+php artisan make:migration create_resources_table
+php artisan make:migration create_ranges_table
+php artisan make:migration create_regions_table
+php artisan make:migration create_year_table
+php artisan make:migration create_champion_position_table
+php artisan make:migration create_champion_specie_table
+php artisan make:migration create_champion_range_table
+php artisan make:migration create_champion_region_table
 ```
 
-Décomposons cette commande :
-- `php` : car Laravel est un framework php
-- `artisan` : la brique de Laravel permettant de générer du code standard (models, controller, migration, vider le cache,...)
-- `make:model` : la commande permettant de générer un nouveau model. Crée un fichier dans `app/Models`
-- `Champion` : spécifie que l'entité doit s'appeler Champion. On aura donc un fichier `Champion.php` dans Models
-- `-m` : crée également un fichier de migration dans `databse/migrations`. Ce fichier de migration contiendra les noms des colonnes et les types de données de la table `champions`. A noter que le lien entre le model et la base de données est fait par cette commande.
+**Question :** Pourquoi créons-nous des tables séparées pour `champion_position`, `champion_region`, `champion_specie` et `champion_range` ?
 
-### 2. Mettre à jour les migrations
+### 2. Définition des structures des tables
 
-Changez le contenu de la fonction `up` pour quelle crée toutes les colonnes de la table `champions` :
+Naviguez vers le dossier `database/migrations`.
+
+**Tâche :** Pour chaque fichier de migration créé, définissez la structure de la table correspondante en vous appuyant sur votre MCD étendu.
+
+Chaque ligne de la fonction `up` correspond à la création d'une colonne de notre base de données. Les relations `one-to-many` vont être matérialisées par des clés étrangères dans la table `champion`.
+
+Exemple pour la table `champions` :
 
 ```php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
+public function up()
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::create('champions', function (Blueprint $table) { //crée la table champions
-            $table->id('champion_id'); // ajoute une colonne id intitulée champion_id
-            $table->string('champion_name'); // ajoute une colonne champion_name qui contiendra des chaînes de caractères
-            $table->timestamps();
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('champions');
-    }
-};
+    Schema::create('champions', function (Blueprint $table) {
+        $table->id('champion_id);
+        $table->string('name', 50);
+        $table->foreignId('gender_id')->constrained();
+        $table->foreignId('resource_id')->constrained();
+        $table->timestamps();
+    });
+}
 ```
 
-Faites de même pour chaque migration d'entité.
+Pour chaque relation `many-to-many`, on crée une table **pivot**. Par exemple :
 
-Si vous souhaitez qu'une élément d'une colonne puisse être null, vous pouvez appeler la fonction `nullable()` de cette façon :
 
 ```php
-$table->string('champion_name')->nullable();
+public function up()
+{
+    Schema::create('champion_position', function (Blueprint $table) {
+        $table->id('champion_position_id');
+        $table->foreignId('champion_id')->constrained();
+        $table->foreignId('position_id')->constrained();
+        $table->unique(['champion_id', 'position_id']);
+    });
+}
 ```
 
-### 3. Démarrer la migration
+**Tâche :** Créez des structures similaires pour les autres tables, en adaptant les champs selon les besoins de chaque entité.
 
-Lancez la commande `php artisan migrate` dans le terminal du conteneur pour appeler les fichier de migration et créer les tables.
+**Question :** Quelles différences notez-vous entre la structure de la table champions et celle des autres tables ?
 
-Vous pouvez vérifier dans l'inspecteur de sqlite la présence de vos tables.
+### 3. Création des modèles
 
-![image](https://github.com/user-attachments/assets/c543c4f2-9b3a-4275-913c-99450c032643)
+**Tâche :** Créez un modèle pour chaque table principale.
 
-### 4. Définir les relations
+```bash
+php artisan make:model Champion
+php artisan make:model Gender
+php artisan make:model Position
+php artisan make:model Specie
+php artisan make:model Resource
+php artisan make:model Range
+php artisan make:model Region
+```
 
-Modifiez les fichiers modèle des entités pour qu'ils incluent les relations. Voici un exemple avec la relation que nous avons vu dans le cours : "un champion possède plusieurs compétences".
-On modifie donc le modèle `Champion` pour y inclure cette relation.
+### 4. Définition des relations dans les modèles
+
+Naviguez vers le dossier `app/Models`.
+
+**Tâche :** Pour chaque modèle, définissez les relations appropriées.
+
+Exemple pour le modèle `Champion` :
 
 ```php
 class Champion extends Model
 {
-    /**
-     * Il peut y avoir du code avant cette fonction
-     */
+    use HasFactory;
 
-    public function abilities()
+    protected $fillable = ['name'];
+
+    public function gender()
     {
-        return $this->hasMany(Ability::class, 'champion_id'); // ce lit : ce champion ($this) a plusieurs compétences (Ability) et pour la connexion entre les deux se fait via le champ `champion_id`
+        return $this->belongsTo(Gender::class);
+    }
+
+    public function positions()
+    {
+        return $this->belongsToMany(Position::class);
+    }
+
+    public function species()
+    {
+        return $this->belongsToMany(Specie::class);
+    }
+
+    public function resource()
+    {
+        return $this->belongsTo(Resource::class);
+    }
+
+    public function ranges()
+    {
+        return $this->belongsToMany(Range::class);
+    }
+
+    public function regions()
+    {
+        return $this->belongsToMany(Region::class);
     }
 }
 ```
 
-Parfois, vous aurez besoin de d'autres types de relation (one-to-one, one-to-many, has-one-of-many,...) vous pouvez utiliser ce guide : https://kinsta.com/fr/blog/relations-laravel-eloquent/
+**Tâche :** Définissez les relations pour les autres modèles de manière similaire.
+
+**Question :** Pourquoi utilisons-nous `belongsToMany` pour certaines relations et `belongsTo` pour d'autres ?
+
+### 5. Exécution des migrations
+
+**Tâche :** Exécutez les migrations pour créer les tables dans la base de données.
+
+```bash
+php artisan migrate
+```
+
+**Question :** Que se passe-t-il si vous exécutez cette commande plusieurs fois ?
+
+**Question finale :** Comment pourriez-vous vérifier que votre structure de base de données a été correctement mise en place ?
+
+Après avoir répondu à ces questions, vous pouvez passer au [TP SQL](./TP_SQL.md)
